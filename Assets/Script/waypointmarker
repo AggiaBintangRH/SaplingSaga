@@ -20,8 +20,11 @@ public class WaypointManager : MonoBehaviour
     public RectTransform canvasRect; // Reference to the canvas rect to keep the marker within bounds
 
     // Define the size of the box in front of the player
-    public float boxWidth = 200f;  // Width of the box in pixels
-    public float boxHeight = 200f; // Height of the box in pixels
+    public float minboxWidth = 200f;  // Width of the box in pixels
+    public float maxboxWidth = 200f;  // Width of the box in pixels
+    public float minboxHeight = 200f; // Height of the box in pixels
+    public float maxboxHeight = 200f; // Height of the box in pixels
+
 
     void Update()
     {
@@ -76,18 +79,16 @@ public class WaypointManager : MonoBehaviour
             }
         }
 
-        // Convert the player's position to screen point for clamping
+        // Get the player's position in screen space
         Vector3 playerScreenPosition = playerCamera.WorldToScreenPoint(playerCamera.transform.position);
 
-        // Define the clamp bounds based on the player's screen position
-        float minX = playerScreenPosition.x - boxWidth / 2;
-        float maxX = playerScreenPosition.x + boxWidth / 2;
-        float minY = playerScreenPosition.y - boxHeight / 2;
-        float maxY = playerScreenPosition.y + boxHeight / 2;
+        // Calculate the center position for the clamp box based on the player's forward direction
+        Vector3 boxCenter = playerScreenPosition + playerCamera.transform.forward * 100; // Adjust 100 to set how far in front of the player the box should be
+
 
         // Clamp the marker position within the defined bounds
-        screenPoint.x = Mathf.Clamp(screenPoint.x, minX, maxX);
-        screenPoint.y = Mathf.Clamp(screenPoint.y, minY, maxY);
+        screenPoint.x = Mathf.Clamp(screenPoint.x, minboxWidth, maxboxWidth);
+        screenPoint.y = Mathf.Clamp(screenPoint.y, minboxHeight, maxboxHeight);
 
         // Convert screen position to canvas position
         Vector2 canvasPos;
