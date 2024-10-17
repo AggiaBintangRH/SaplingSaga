@@ -1,28 +1,93 @@
 using UnityEngine;
+using UnityEngine.UI;
 
-public class WaypointMarker : MonoBehaviour
+public class WaypointManager : MonoBehaviour
 {
     public Transform targetObject; // The object the waypoint points to
+    public Camera playerCamera; // VR or main camera
+
+    // The UI Image for the arrow sprite
+    public Image arrowImage;
+
+    // Assign the arrow sprites in the inspector
+    public Sprite arrowLeft;
+    public Sprite arrowRight;
+    public Sprite arrowUp;
+    public Sprite arrowDown;
+
+    // The UI marker for the canvas
     public RectTransform waypointMarker; // The UI marker on the canvas
-    public Camera playerCamera;
     public RectTransform canvasRect; // Reference to the canvas rect to keep the marker within bounds
+
+    // Define the size of the box in front of the player
+    public float boxWidth = 200f;  // Width of the box in pixels
+    public float boxHeight = 200f; // Height of the box in pixels
 
     void Update()
     {
-        // Get the screen position of the target object
+        // Get the position of the target relative to the player's camera
         Vector3 screenPoint = playerCamera.WorldToScreenPoint(targetObject.position);
 
-        // Check if the object is behind the player
-        if (screenPoint.z < 0)
+        // Determine if the target is behind the player
+        bool isBehind = screenPoint.z < 0;
+
+        // Get the direction to the target in local space relative to the player
+        Vector3 localTargetPosition = playerCamera.transform.InverseTransformPoint(targetObject.position);
+
+        // Determine the arrow direction
+        if (isBehind)
         {
-            // If behind, reverse the direction to keep the marker within the visible canvas
-            screenPoint.x = Screen.width - screenPoint.x;
-            screenPoint.y = Screen.height - screenPoint.y;
+            // If behind, only show left or right arrow
+            if (localTargetPosition.x < 0)
+            {
+                arrowImage.sprite = arrowLeft;
+            }
+            else
+            {
+                arrowImage.sprite = arrowRight;
+            }
+        }
+        else
+        {
+            // Target is in front of the player, determine exact direction
+            if (Mathf.Abs(localTargetPosition.x) > Mathf.Abs(localTargetPosition.y))
+            {
+                // Target is more to the left or right
+                if (localTargetPosition.x < 0)
+                {
+                    arrowImage.sprite = arrowLeft;
+                }
+                else
+                {
+                    arrowImage.sprite = arrowRight;
+                }
+            }
+            else
+            {
+                // Target is more up or down
+                if (localTargetPosition.y > 0)
+                {
+                    arrowImage.sprite = arrowUp;
+                }
+                else
+                {
+                    arrowImage.sprite = arrowDown;
+                }
+            }
         }
 
-        // Clamp the marker position within the canvas bounds
-        screenPoint.x = Mathf.Clamp(screenPoint.x, 0, Screen.width);
-        screenPoint.y = Mathf.Clamp(screenPoint.y, 0, Screen.height);
+        // Convert the player's position to screen point for clamping
+        Vector3 playerScreenPosition = playerCamera.WorldToScreenPoint(playerCamera.transform.position);
+
+        // Define the clamp bounds based on the player's screen position
+        float minX = playerScreenPosition.x - boxWidth / 2;
+        float maxX = playerScreenPosition.x + boxWidth / 2;
+        float minY = playerScreenPosition.y - boxHeight / 2;
+        float maxY = playerScreenPosition.y + boxHeight / 2;
+
+        // Clamp the marker position within the defined bounds
+        screenPoint.x = Mathf.Clamp(screenPoint.x, minX, maxX);
+        screenPoint.y = Mathf.Clamp(screenPoint.y, minY, maxY);
 
         // Convert screen position to canvas position
         Vector2 canvasPos;
