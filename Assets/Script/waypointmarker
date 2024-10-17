@@ -1,0 +1,34 @@
+using UnityEngine;
+
+public class WaypointMarker : MonoBehaviour
+{
+    public Transform targetObject; // The object the waypoint points to
+    public RectTransform waypointMarker; // The UI marker on the canvas
+    public Camera playerCamera;
+    public RectTransform canvasRect; // Reference to the canvas rect to keep the marker within bounds
+
+    void Update()
+    {
+        // Get the screen position of the target object
+        Vector3 screenPoint = playerCamera.WorldToScreenPoint(targetObject.position);
+
+        // Check if the object is behind the player
+        if (screenPoint.z < 0)
+        {
+            // If behind, reverse the direction to keep the marker within the visible canvas
+            screenPoint.x = Screen.width - screenPoint.x;
+            screenPoint.y = Screen.height - screenPoint.y;
+        }
+
+        // Clamp the marker position within the canvas bounds
+        screenPoint.x = Mathf.Clamp(screenPoint.x, 0, Screen.width);
+        screenPoint.y = Mathf.Clamp(screenPoint.y, 0, Screen.height);
+
+        // Convert screen position to canvas position
+        Vector2 canvasPos;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPoint, playerCamera, out canvasPos);
+
+        // Set the marker position on the canvas
+        waypointMarker.anchoredPosition = canvasPos;
+    }
+}
